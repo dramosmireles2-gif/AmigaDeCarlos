@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const config = {
+  serverExternalPackages: ['firebase-admin'],
   images: {
     remotePatterns: [
       {
