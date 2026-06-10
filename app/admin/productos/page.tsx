@@ -1,14 +1,17 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { MOCK_PRODUCTS, CATEGORIES } from '@/lib/data'
+import { CATEGORIES } from '@/lib/data'
+import { dbGetProducts } from '@/lib/db'
 
-export default function AdminProductos() {
+export default async function AdminProductos() {
+  const products = await dbGetProducts()
+
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900">Productos</h1>
-          <p className="text-sm text-stone-400 mt-1">{MOCK_PRODUCTS.length} productos en catálogo</p>
+          <p className="text-sm text-stone-400 mt-1">{products.length} productos en catálogo</p>
         </div>
         <Link
           href="/admin/productos/nuevo"
@@ -43,7 +46,7 @@ export default function AdminProductos() {
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-50">
-            {MOCK_PRODUCTS.map((product) => {
+            {products.map((product) => {
               const totalStock = product.variants.reduce((sum, v) => sum + v.stock, 0)
               const image = product.variants[0]?.images[0] ?? '/product-1.jpg'
               return (

@@ -1,7 +1,11 @@
 import Image from 'next/image'
-import { PRODUCTS } from '@/lib/data'
+import Link from 'next/link'
+import { dbGetProducts } from '@/lib/db'
 
-export default function FeaturedCollection() {
+export default async function FeaturedCollection() {
+  const all = await dbGetProducts()
+  const products = all.slice(0, 6)
+
   return (
     <section id="collections" className="py-24 px-6 bg-mare-cream">
       <div className="max-w-7xl mx-auto">
@@ -13,13 +17,13 @@ export default function FeaturedCollection() {
 
         {/* Product grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-          {PRODUCTS.map((product) => (
-            <div key={product.id} className="group cursor-pointer">
+          {products.map((product) => (
+            <Link key={product.id} href={`/productos/${product.category}/${product.slug}`} className="group cursor-pointer">
               {/* Image container */}
               <div className="relative aspect-[3/4] overflow-hidden bg-stone-100 mb-4">
                 <Image
-                  src={product.imageUrl}
-                  alt={product.imageAlt}
+                  src={product.variants[0].images[0]}
+                  alt={product.name}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   sizes="(max-width: 768px) 50vw, 33vw"
@@ -29,7 +33,7 @@ export default function FeaturedCollection() {
                 {/* Quick view reveal */}
                 <div className="absolute bottom-0 left-0 right-0 bg-white/95 py-3 px-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
                   <p className="text-xs tracking-widest uppercase text-center text-mare-dark">
-                    Quick View
+                    Ver producto
                   </p>
                 </div>
               </div>
@@ -38,17 +42,17 @@ export default function FeaturedCollection() {
               <div className="px-1">
                 <p className="text-[10px] tracking-widest uppercase text-mare-gray mb-1">{product.category}</p>
                 <p className="font-serif text-lg font-light">{product.name}</p>
-                <p className="text-sm text-stone-500 mt-1">{product.price}</p>
+                <p className="text-sm text-stone-500 mt-1">${product.price.toLocaleString('es-MX')}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
         {/* View all CTA */}
         <div className="text-center mt-16">
-          <button className="border border-mare-dark text-mare-dark text-xs tracking-[0.3em] uppercase px-12 py-4 hover:bg-mare-dark hover:text-white transition-all duration-300">
-            View All Pieces
-          </button>
+          <Link href="/productos" className="inline-block border border-mare-dark text-mare-dark text-xs tracking-[0.3em] uppercase px-12 py-4 hover:bg-mare-dark hover:text-white transition-all duration-300">
+            Ver todos los productos
+          </Link>
         </div>
       </div>
     </section>

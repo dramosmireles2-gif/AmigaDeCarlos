@@ -1,7 +1,8 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import ProductCard from '@/components/ui/ProductCard'
-import { MOCK_PRODUCTS, CATEGORIES } from '@/lib/data'
+import { CATEGORIES } from '@/lib/data'
+import { dbGetProducts } from '@/lib/db'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
@@ -9,11 +10,12 @@ interface Props {
   params: { categoria: string }
 }
 
-export default function CategoriaPage({ params }: Props) {
+export default async function CategoriaPage({ params }: Props) {
   const category = CATEGORIES.find((c) => c.slug === params.categoria)
   if (!category) notFound()
 
-  const products = MOCK_PRODUCTS.filter((p) => p.category === params.categoria)
+  const allProducts = await dbGetProducts()
+  const products = allProducts.filter((p) => p.category === params.categoria)
 
   return (
     <>

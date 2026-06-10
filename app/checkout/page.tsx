@@ -37,13 +37,53 @@ export default function CheckoutPage() {
 
   const states = country === 'MX' ? MX_STATES : US_STATES
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    setTimeout(() => {
+
+    const form = e.currentTarget
+    const get = (name: string) => (form.elements.namedItem(name) as HTMLInputElement)?.value ?? ''
+
+    const body = {
+      name: `${get('nombre')} ${get('apellido')}`.trim(),
+      email: get('email'),
+      phone: get('telefono'),
+      street: get('calle'),
+      apartment: get('colonia'),
+      city: get('ciudad'),
+      state: get('estado'),
+      zip: get('cp'),
+      country,
+      paymentMethod,
+      items: items.map(i => ({
+        productId: i.productId,
+        variantId: i.variantId,
+        name: i.name,
+        color: i.color,
+        price: i.price,
+        imageUrl: i.imageUrl,
+        quantity: i.quantity,
+      })),
+      subtotal: total,
+      shippingCost,
+      total: grandTotal,
+    }
+
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) { setLoading(false); return }
+
+      // TODO: if paymentMethod === 'tarjeta' → redirect to Stripe payment here
       clearCart()
-      router.push('/checkout/confirmacion?orden=ORD-001&metodo=' + paymentMethod)
-    }, 1200)
+      router.push(`/checkout/confirmacion?orden=${data.orderId}&metodo=${paymentMethod}`)
+    } catch {
+      setLoading(false)
+    }
   }
 
   if (items.length === 0) {
@@ -68,11 +108,11 @@ export default function CheckoutPage() {
                   <h2 className="text-xs tracking-widest uppercase font-medium mb-4">Datos de contacto</h2>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <input required placeholder="Nombre" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
-                      <input required placeholder="Apellido" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
+                      <input name="nombre" required placeholder="Nombre" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
+                      <input name="apellido" required placeholder="Apellido" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
                     </div>
-                    <input required type="email" placeholder="Correo electrónico" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
-                    <input required type="tel" placeholder="Teléfono" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
+                    <input name="email" required type="email" placeholder="Correo electrónico" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
+                    <input name="telefono" required type="tel" placeholder="Teléfono" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
                   </div>
                 </section>
 
@@ -96,16 +136,16 @@ export default function CheckoutPage() {
                         🇺🇸 Estados Unidos
                       </button>
                     </div>
-                    <input required placeholder="Calle y número" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
-                    <input placeholder="Colonia / Apartamento (opcional)" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
+                    <input name="calle" required placeholder="Calle y número" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
+                    <input name="colonia" placeholder="Colonia / Apartamento (opcional)" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
                     <div className="grid grid-cols-2 gap-4">
-                      <input required placeholder="Ciudad" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
-                      <select required className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors bg-white">
+                      <input name="ciudad" required placeholder="Ciudad" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
+                      <select name="estado" required className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors bg-white">
                         <option value="">Estado</option>
                         {states.map((s) => <option key={s}>{s}</option>)}
                       </select>
                     </div>
-                    <input required placeholder="Código postal" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
+                    <input name="cp" required placeholder="Código postal" className="border border-stone-300 px-4 py-3 text-sm w-full focus:outline-none focus:border-mare-dark transition-colors" />
                   </div>
 
                   {/* Estimación de envío */}

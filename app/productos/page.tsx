@@ -1,10 +1,13 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import ProductCard from '@/components/ui/ProductCard'
-import { MOCK_PRODUCTS, CATEGORIES } from '@/lib/data'
+import { CATEGORIES } from '@/lib/data'
+import { dbGetProducts } from '@/lib/db'
 import Link from 'next/link'
 
-export default function ProductosPage() {
+export default async function ProductosPage() {
+  const products = await dbGetProducts()
+
   return (
     <>
       <Navbar />
@@ -15,7 +18,7 @@ export default function ProductosPage() {
           <div className="mb-10">
             <p className="text-xs tracking-widest uppercase text-mare-gray mb-2">Tienda</p>
             <h1 className="font-serif text-4xl font-light">Todos los productos</h1>
-            <p className="text-sm text-mare-gray mt-2">{MOCK_PRODUCTS.length} productos</p>
+            <p className="text-sm text-mare-gray mt-2">{products.length} productos</p>
           </div>
 
           <div className="flex gap-10">
@@ -77,7 +80,7 @@ export default function ProductosPage() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                {MOCK_PRODUCTS.map((product) => (
+                {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
