@@ -1,2 +1,43 @@
-.next/
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Build
+.next/
+out/
+build/
+dist/
+
+# Environment — NUNCA subir al repo
+.env
+.env.local
+.env.development
+.env.production
+.env*.local
+.env.*.local
+
+# Firebase service account keys
+*-firebase-adminsdk-*.json
+*serviceAccount*.json
+*.key.json
+serviceAccountKey.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vercel
+.vercel
+.env.vercel

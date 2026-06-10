@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   }
 
   // TODO: replace with → await db.orders.create({ data: order })
-  const created = dbCreateOrder(order)
+  const created = await dbCreateOrder(order)
 
   return NextResponse.json({ orderId: created.id, status: created.status })
 }

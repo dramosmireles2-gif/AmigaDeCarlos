@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
 import { BRAND } from '@/lib/config'
 
 function LoginForm() {
@@ -10,6 +11,7 @@ function LoginForm() {
   const params = useSearchParams()
   const redirect = params.get('redirect') ?? '/admin'
 
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -19,17 +21,27 @@ function LoginForm() {
     setLoading(true)
     setError('')
 
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    })
+    try {
+      // Autenticamos con Firebase
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      const idToken = await credential.user.getIdToken()
 
-    if (res.ok) {
-      router.push(redirect)
-      router.refresh()
-    } else {
-      setError('Contraseña incorrecta')
+      // Mandamos el token al servidor para crear la cookie de sesión
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      })
+
+      if (res.ok) {
+        router.push(redirect)
+        router.refresh()
+      } else {
+        setError('No tienes acceso al panel de administración')
+        setLoading(false)
+      }
+    } catch {
+      setError('Correo o contraseña incorrectos')
       setLoading(false)
     }
   }
@@ -45,6 +57,21 @@ function LoginForm() {
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-stone-100 p-8 space-y-5 shadow-sm">
           <div>
             <label className="text-xs text-stone-500 uppercase tracking-wider block mb-2">
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="admin@marca.com"
+              required
+              autoFocus
+              className="w-full border border-stone-200 px-4 py-3 text-sm rounded-xl focus:outline-none focus:border-stone-400 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs text-stone-500 uppercase tracking-wider block mb-2">
               Contraseña
             </label>
             <input
@@ -53,7 +80,6 @@ function LoginForm() {
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              autoFocus
               className="w-full border border-stone-200 px-4 py-3 text-sm rounded-xl focus:outline-none focus:border-stone-400 transition-colors"
             />
           </div>
@@ -71,11 +97,6 @@ function LoginForm() {
           >
             {loading ? 'Entrando...' : 'Entrar al admin'}
           </button>
-
-          {/* TODO: replace with Firebase Auth UI or NextAuth signIn() */}
-          <p className="text-[10px] text-stone-300 text-center">
-            Contraseña por defecto: <span className="font-mono">admin123</span> · Cambiar en .env.local → ADMIN_PASSWORD
-          </p>
         </form>
       </div>
     </main>
