@@ -1,29 +1,24 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { initializeApp, getApps, cert } from 'firebase-admin/app'
-import { getAuth } from 'firebase-admin/auth'
+import { createRemoteJWKSet, jwtVerify } from 'jose'
 
-// Inicializa Firebase Admin (solo en el servidor)
-function getAdminAuth() {
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      }),
-    })
-  }
-  return getAuth()
-}
+// Firebase publica sus llaves aquí — sin firebase-admin, sin conflicto ESM
+const FIREBASE_JWKS = createRemoteJWKSet(
+  new URL(
+    'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
+  )
+)
+
+const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!
 
 export async function POST(req: Request) {
   const { idToken } = await req.json()
 
   try {
-    // Verifica el token con Firebase Admin
-    const adminAuth = getAdminAuth()
-    await adminAuth.verifyIdToken(idToken)
+    await jwtVerify(idToken, FIREBASE_JWKS, {
+      issuer: `https://securetoken.google.com/${PROJECT_ID}`,
+      audience: PROJECT_ID,
+    })
 
     // Token válido → crea cookie de sesión
     const cookieStore = await cookies()
